@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>无尽星空工作台 - 小红书获客服务交付平台</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* 基础样式重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* 星空背景 */
+        .starfield {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: -2;
+            background: radial-gradient(ellipse at center, #0a1522 0%, #000 100%);
+            overflow: hidden;
+        }
+        
+        .stars {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            opacity: 0;
+            animation: star-appear 1s forwards, twinkle 4s infinite;
+        }
+        
+        @keyframes star-appear {
+            from { opacity: 0; transform: scale(0.5); }
+            to { opacity: 0.3; transform: scale(1); }
+        }
+        
+        .star.bright {
+            box-shadow: 0 0 4px rgba(255, 255, 255, 0.8);
+        }
+        
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 0.9; transform: scale(1.2); }
+        }
+        
+        @keyframes float-star {
+            0% { transform: translateY(0) translateX(0); }
+            50% { transform: translateY(-20px) translateX(10px); }
+            100% { transform: translateY(0) translateX(0); }
+        }
+        
+        /* 主体内容容器 */
+        .container {
+            margin: 0;
+            padding: 15px;
+            max-width: 100%;
+        }
+        
+        /* 页面标题 */
+        .page-title {
+            text-align: center;
+            margin: 1.5rem 0;
+            color: white;
+            font-size: 2rem;
+            font-weight: 600;
+            text-shadow: 0 0 10px rgba(77, 171, 247, 0.5);
+            opacity: 0;
+            animation: fade-in 1s ease-out 0.3s forwards;
+        }
+        
+        @keyframes fade-in {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* 毛玻璃导航栏 */
+        .nav {
+            backdrop-filter: blur(10px);
+            background: rgba(0, 0, 0, 0.6);
+            padding: 1rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            opacity: 0;
+            animation: fade-in 1s ease-out 0.5s forwards;
+        }
+        
+        .nav-list {
+            display: flex;
+            justify-content: center;
+            gap: 0.8rem;
+            list-style: none;
+            flex-wrap: wrap;
+        }
+        
+        .nav-item {
+            color: #fff;
+            font-weight: 500;
+            cursor: pointer;
+            padding: 0.6rem 1rem;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.9rem;
+        }
+        
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(77, 171, 247, 0.5);
+            transform: translateY(-2px);
+        }
+        
+        .nav-item.active {
+            background: rgba(77, 171, 247, 0.15);
+            border-color: rgba(77, 171, 247, 0.8);
+            color: #4dabf7;
+        }
+        
+        .nav-item:active {
+            transform: translateY(1px);
+            box-shadow: 0 0 5px rgba(77, 171, 247, 0.5);
+        }
+        
+        /* 卡片布局 */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 1rem;
+            padding: 1rem 0;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            border-radius: 8px;
+            padding: 1rem;
+            transition: transform 0.3s, box-shadow 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            opacity: 0;
+            transform: translateY(15px);
+            border-top: 3px solid transparent;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        
+        .card.pool { border-top-color: #4dabf7; }
+        .card.spotlight { border-top-color: #76e276; }
+        .card.agent { border-top-color: #f7ba4d; }
+        .card.knowledge { border-top-color: #f74d4d; }
+        .card.delivery { border-top-color: #a56cf7; }
+        
+        .card.animate-in {
+            animation: card-appear 0.6s forwards;
+        }
+        
+        @keyframes card-appear {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* 新增：emoji背景样式 */
+        .card-icon {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            margin-bottom: 0.8rem;
+            font-size: 1.5rem;
+        }
+        
+        /* 卡片内容样式 */
+        .card-tag {
+            color: #4dabf7;
+            font-size: 0.8rem;
+            margin-bottom: 0.4rem;
+            font-weight: 500;
+        }
+        
+        .card-title {
+            color: #fff;
+            font-size: 1.1rem;
+            margin-bottom: 0.6rem;
+            font-weight: 600;
+        }
+        
+        /*.card-subtitle {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.85rem;
+            margin-bottom: 0.6rem;
+            font-style: italic;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }*/
+        
+        .card-description {
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .card-actions {
+            display: flex;
+            flex-direction: row;
+            gap: 0.6rem;
+            margin-top: auto;
+        }
+        
+        .card-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+            font-weight: 500;
+            font-size: 0.85rem;
+            text-decoration: none;
+            color: #4dabf7;
+            border: 1px solid rgba(77, 171, 247, 0.5);
+            transition: all 0.3s ease;
+        }
+        
+        .card-link:hover {
+            background: rgba(77, 171, 247, 0.1);
+        }
+        
+        .card-link.placeholder {
+            color: #888;
+            border-color: #888;
+            cursor: not-allowed;
+        }
+        
+        .card-link.placeholder:hover {
+            background: transparent;
+        }
+        
+        /* 内容区域切换动画 */
+        .content-section {
+            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            opacity: 0;
+            transform: translateY(20px);
+            height: 0;
+            overflow: hidden;
+        }
+        
+        .content-section.active {
+            opacity: 1;
+            transform: translateY(0);
+            height: auto;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .card-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .nav-item {
+                padding: 0.5rem 0.8rem;
+                font-size: 0.85rem;
+            }
+            
+            .page-title {
+                font-size: 1.6rem;
+            }
+            
+            .card {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 星空背景 -->
+    <div class="starfield">
+        <div class="stars"></div>
+    </div>
+    
+    <!-- 页面标题 -->
+    <h1 class="page-title">无尽星空工作台</h1>
+    
+    <!-- 导航栏 -->
+    <nav class="nav">
+        <ul class="nav-list">
+            <li class="nav-item active" data-section="all">全部</li>
+            <li class="nav-item" data-section="pool">流量池</li>
+            <li class="nav-item" data-section="spotlight">聚光区</li>
+            <li class="nav-item" data-section="agent">智能体</li>
+            <li class="nav-item" data-section="knowledge">知识库</li>
+            <li class="nav-item" data-section="delivery">交付仓</li>
+        </ul>
+    </nav>
+    
+    <!-- 内容容器 -->
+    <div class="container">
+        <!-- 全部卡片板块 -->
+        <div class="content-section active" id="all-section">
+            <div class="card-grid" id="all-cards"></div>
+        </div>
+        
+        <!-- 流量池板块 -->
+        <div class="content-section" id="pool-section">
+            <div class="card-grid" id="pool-cards"></div>
+        </div>
+        
+        <!-- 聚光区板块 -->
+        <div class="content-section" id="spotlight-section">
+            <div class="card-grid" id="spotlight-cards"></div>
+        </div>
+        
+        <!-- 智能体板块 -->
+        <div class="content-section" id="agent-section">
+            <div class="card-grid" id="agent-cards"></div>
+        </div>
+        
+        <!-- 知识库板块 -->
+        <div class="content-section" id="knowledge-section">
+            <div class="card-grid" id="knowledge-cards"></div>
+        </div>
+        
+        <!-- 交付仓板块 -->
+        <div class="content-section" id="delivery-section">
+            <div class="card-grid" id="delivery-cards"></div>
+        </div>
+    </div>
+    
+    <script>
+        // 当前活跃的部分
+        let activeSection = 'all';
+        
+        // 星空背景初始化
+        function initStars() {
+            const starsContainer = document.querySelector('.stars');
+            const count = Math.floor(window.innerWidth / 10);
+            
+            for (let i = 0; i < count; i++) {
+                const star = document.createElement('div');
+                star.classList.add('star');
+                
+                const x = Math.random() * 100;
+                const y = Math.random() * 100;
+                const size = Math.random() * 2 + 1;
+                const delay = Math.random() * 3;
+                
+                star.style.animationDelay = `${delay}s, ${(delay + Math.random()) % 4}s`;
+                
+                if (Math.random() < 0.2) {
+                    star.classList.add('bright');
+                }
+                
+                if (Math.random() < 0.1) {
+                    star.style.animationName = 'star-appear, float-star';
+                    star.style.animationDuration = '1s, 20s';
+                    star.style.animationIterationCount = 'forwards, infinite';
+                }
+                
+                star.style.left = `${x}%`;
+                star.style.top = `${y}%`;
+                star.style.width = `${size}px`;
+                star.style.height = `${size}px`;
+                
+                starsContainer.appendChild(star);
+            }
+        }
+        
+        // 内容数据（根据截图2调整）
+        const contentData = {
+            pool: [
+                { id: 1, icon: '📰', name: '韩哥运营笔记（公众号）', subtitle: '韩哥运营笔记', description: '流量收割机 小红书获客专家', link: 'https://mp.weixin.qq.com/s/IO0McGI78UbE8EfS9fRgPA', category: 'pool' },
+                { id: 2, icon: '📚', name: '韩哥小红书获客手册（星球）', subtitle: '', description: '600+运营者交流社区', link: 'https://wx.zsxq.com/group/48884181252218', category: 'pool' },
+                { id: 3, icon: '📋', name: '产品手册', subtitle: '内部', description: '业务介绍与流程', link: 'https://bmy4tfqyf1.feishu.cn/docx/XhBydhEOWoiHDbxT0lJcTRCNnVe', category: 'pool' }
+            ],
+            spotlight: [
+                { id: 4, icon: '📰', name: '聚光日报', subtitle: '日报', description: '每日投放数据', link: 'https://bmy4tfqyf1.feishu.cn/base/GjJEbZijwasAEts5pSMcsKK1n5w?table=blktkGcE9qaG45sY', category: 'spotlight' },
+                { id: 5, icon: '🔐', name: '聚光认证', subtitle: '操作指南', description: '专业号、广告主认证流程', link: 'https://bmy4tfqyf1.feishu.cn/docx/C1B0dGA5so2GLtxOa6AcfK32nIf', category: 'spotlight' },
+                { id: 6, icon: '📁', name: '聚光文档', subtitle: '资料汇总', description: '教程、内部资料', link: 'https://bmy4tfqyf1.feishu.cn/sheets/Iyf8sfKnAhITLstTzwrcKERKngh?sheet=c27czY', category: 'spotlight' },
+            ],
+            agent: [
+                { id: 8, icon: '🤖', name: 'ima韩哥获客问答', subtitle: '智能问答', description: 'ima知识库', link: 'https://ima.qq.com/wiki/?shareId=fc09abb75ec98cee70bf20bc1c2481cd0cb408898d16ac850c4c8a74dd0c0e5b', category: 'agent' },
+                { id: 9, icon: '🤖', name: 'IP孵化智能体', subtitle: 'AI助手', description: 'Coze扣子智能体', link: 'https://www.coze.cn/user/451259527081130?access_entrance=bot_detail&sub_tab=bots&tab=user_product', category: 'agent' },
+                { id: 10, icon: '💬', name: '提示词库', subtitle: '工具', description: '提示词库', link: 'https://bmy4tfqyf1.feishu.cn/base/E7gYbZxKyavOUIsfAHAc5mX2nUd?table=tblwlvOWYz3VmhLy&view=vewOlTvTea', category: 'agent' }
+            ],
+            knowledge: [
+                { id: 16, icon: '📚', name: '行业SOP', subtitle: '资料包', description: '含行业报告、起号模板', link: 'https://bmy4tfqyf1.feishu.cn/wiki/GPtHwUXPxinJUFkZuf7cfBJFnae?sheet=f721fd', category: 'knowledge' },
+                { id: 17, icon: '📝', name: '引流SOP', subtitle: '操作指南', description: '小红书引流sop', link: 'https://bmy4tfqyf1.feishu.cn/wiki/QWN7wmb7FinR2Gky14VcxWyZngd', category: 'knowledge' },
+                { id: 18, icon: '🙋', name: '打卡营FAQ', subtitle: '问答', description: '21天行动营FAQ', link: 'https://bmy4tfqyf1.feishu.cn/wiki/IjXpwliEMikUe4ktd3ZcFXVunHh', category: 'knowledge' },
+                { id: 19, icon: '📋', name: '账号诊断清单', subtitle: '工具', description: '小红书账号诊断', link: 'https://bmy4tfqyf1.feishu.cn/docx/CXX4dmBTToIDEzxVyUUcg507nMb', category: 'knowledge' }
+            ],
+            delivery: [
+                { id: 11, icon: '🎓', name: '小红书获客训练营',  description: '线上课程（小鹅通）', link: 'https://pqwar.xetslk.com/s/4rk6IL', category: 'delivery' },
+                { id: 15, icon: '📋', name: '小红书私教SOP',  description: '私教sop模板', link: 'https://bmy4tfqyf1.feishu.cn/wiki/JLrJwb3L7ibW5kk9qf2cJbz6nXd?sheet=KxWE3b', category: 'delivery' },
+                { id: 12, icon: '📋', name: '学员案例', description: '案例集', link: 'https://bmy4tfqyf1.feishu.cn/sheets/G5HhshUwchJl8XtekSFcF1zJnrb?table=tblzkXIfeEBl0kbv&view=veweQx63kA&from=from_parent_sheet', category: 'delivery' },
+                { id: 13, icon: '📂', name: '学员档案', description: '含定制方案、选题等', link: 'https://bmy4tfqyf1.feishu.cn/sheets/Iyf8sfKnAhITLstTzwrcKERKngh?sheet=a3f2dd', category: 'delivery' },
+                { id: 14, icon: '📄', name: '合同库',  description: '各类协议模板', link: 'https://bmy4tfqyf1.feishu.cn/base/MLcCbyJiEaVDOmseyzPc9nfFnCf?table=tblnJq12xynTDDBx&view=vewT2XlJll', category: 'delivery' }
+            ]
+        };
+        
+        // 获取所有卡片数据
+        function getAllCards() {
+            let allCards = [];
+            Object.keys(contentData).forEach(category => {
+                allCards = [...allCards, ...contentData[category]];
+            });
+            return allCards;
+        }
+        
+        // 渲染卡片
+        function renderCards() {
+            try {
+                // 渲染全部卡片
+                const allCardsContainer = document.getElementById('all-cards');
+                allCardsContainer.innerHTML = '';
+                const allCards = getAllCards();
+                
+                allCards.forEach((item, index) => {
+                    const card = document.createElement('div');
+                    card.className = `card animate-in ${item.category}`;
+                    card.innerHTML = `
+                        <div class="card-icon">${item.icon}</div>
+                        <h3 class="card-title">${item.name}</h3>
+                        <div class="card-tag">${getCategoryText(item.category)}</div>
+                        <p class="card-description">${item.description}</p>
+                        <div class="card-actions">
+                            ${item.link && item.link !== '待补充' && item.link !== '学员档案' && item.link !== '打卡营FAQ' && item.link !== '小红书账号诊断清单' && item.link !== '小红书私教sop模板' ? 
+                                `<a href="${item.link}" class="card-link" target="_blank">链接直达</a>` : 
+                                item.link === '学员档案' || item.link === '打卡营FAQ' || item.link === '小红书账号诊断清单' || item.link === '小红书私教sop模板' ?
+                                `<a href="#" class="card-link" target="_blank">${item.link}</a>` :
+                                `<a href="#" class="card-link placeholder" target="_blank">链接待补充</a>`
+                            }
+                        </div>
+                    `;
+                    
+                    allCardsContainer.appendChild(card);
+                });
+                
+                // 渲染分类卡片
+                Object.keys(contentData).forEach(category => {
+                    const container = document.getElementById(`${category}-cards`);
+                    container.innerHTML = '';
+                    
+                    contentData[category].forEach((item, index) => {
+                        const card = document.createElement('div');
+                        card.className = `card animate-in ${item.category}`;
+                        
+                        card.innerHTML = `
+                            <div class="card-icon">${item.icon}</div>
+                            <h3 class="card-title">${item.name}</h3>
+                            <div class="card-tag">${getCategoryText(item.category)}</div>
+                            <p class="card-description">${item.description}</p>
+                            <div class="card-actions">
+                                ${item.link && item.link !== '待补充' && item.link !== '学员档案' && item.link !== '打卡营FAQ' && item.link !== '小红书账号诊断清单' && item.link !== '小红书私教sop模板' ? 
+                                    `<a href="${item.link}" class="card-link" target="_blank">链接直达</a>` : 
+                                    item.link === '学员档案' || item.link === '打卡营FAQ' || item.link === '小红书账号诊断清单' || item.link === '小红书私教sop模板' ?
+                                    `<a href="#" class="card-link" target="_blank">${item.link}</a>` :
+                                    `<a href="#" class="card-link placeholder" target="_blank">链接待补充</a>`
+                                }
+                            </div>
+                        `;
+                        
+                        container.appendChild(card);
+                    });
+                });
+            } catch (error) {
+                console.error('渲染卡片时出错:', error);
+            }
+        }
+        
+        // 获取分类文本
+        function getCategoryText(category) {
+            const categoryMap = {
+                'pool': '流量池',
+                'spotlight': '聚光区',
+                'agent': '智能体',
+                'knowledge': '知识库',
+                'delivery': '交付仓'
+            };
+            return categoryMap[category] || category;
+        }
+        
+        // 切换内容部分
+        function switchSection(sectionId) {
+            if (sectionId === activeSection) return;
+            
+            const currentSection = document.getElementById(`${activeSection}-section`);
+            const newSection = document.getElementById(`${sectionId}-section`);
+            
+            if (!currentSection || !newSection) {
+                console.error('无法找到内容部分元素');
+                return;
+            }
+            
+            currentSection.classList.remove('active');
+            
+            setTimeout(() => {
+                const cards = document.querySelectorAll('.card');
+                cards.forEach(card => {
+                    card.classList.remove('animate-in');
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateY(15px)';
+                });
+                
+                newSection.classList.add('active');
+                setTimeout(renderCards, 50);
+                activeSection = sectionId;
+            }, 300);
+            
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            document.querySelector(`.nav-item[data-section="${sectionId}"]`).classList.add('active');
+        }
+        
+        // 初始化导航栏事件
+        function initNavEvents() {
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const sectionId = item.getAttribute('data-section');
+                    switchSection(sectionId);
+                });
+            });
+        }
+        
+        // 页面加载完成后初始化
+        window.addEventListener('DOMContentLoaded', () => {
+            initStars();
+            renderCards();
+            initNavEvents();
+        });
+        
+        // 窗口大小变化时重新初始化星星
+        window.addEventListener('resize', () => {
+            const starsContainer = document.querySelector('.stars');
+            starsContainer.innerHTML = '';
+            initStars();
+        });
+    </script>
+</body>
+</html>
